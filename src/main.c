@@ -395,7 +395,7 @@ bool parse_lambda_expr(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* 
     
     *expr = lm_mk_abs(param_index, *expr);
 
-    return true;
+    return *expr;
 }
 
 bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* state) {
@@ -456,7 +456,7 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
 
             }
 
-            return expr;
+            return *expr;
         }
         
         case CLEX_id: {
