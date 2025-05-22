@@ -67,13 +67,6 @@ const list_sum = λ lst. (
     list_fold (λ x. λ y. (+ x y)) 0 lst
 )
 
-const fib = (Y
-    λ recursive. λ n. (
-        (> n 3)
-            (+ (recursive (- n 1)) (recursive (- n 2)))
-            1
-    )
-)
 const not = λ val. (val false true)
 const sample_list = (make_list (λ x. (= 0 x)) 1 2 3 4 5 6 7 8 9 10 0)
 const main = (

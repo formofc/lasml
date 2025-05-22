@@ -513,6 +513,7 @@ bool parse_quote(l_vm_state_t* state, const char* quote) {
     store_buffer = (char*)malloc(1024);
     if (!store_buffer) {
         perror("Buy more RAM");
+        goto cleanup;
     }
 
     stb_c_lexer_init(&parse_context.lex, quote, quote + strlen(quote), store_buffer, 1024);
@@ -617,67 +618,17 @@ cleanup:
     return success;
 }
 
-void lm_node_debug_print(const lm_node_t* node, int indent) {
-    if (node == NULL) {
-        printf("%*sNULL\n", indent, "");
-        return;
-    }
-
-    printf("%*sNode (ref_count=%d): ", indent, "", node->ref_count);
-    
-    switch (node->tag) {
-        case LM_NODE_ABSTRACTION:
-            printf("Abstraction\n");
-            printf("%*svar_index: %ld\n", indent + 2, "", node->as.abstraction.var_index);
-            printf("%*sbody:\n", indent + 2, "");
-            lm_node_debug_print(node->as.abstraction.body, indent + 4);
-            break;
-            
-        case LM_NODE_APPLICATION:
-            printf("Application\n");
-            printf("%*sfunc:\n", indent + 2, "");
-            lm_node_debug_print(node->as.application.func, indent + 4);
-            printf("%*sarg:\n", indent + 2, "");
-            lm_node_debug_print(node->as.application.arg, indent + 4);
-            break;
-            
-        case LM_NODE_VARIABLE:
-            printf("Variable (index=%ld)\n", node->as.variable);
-            break;
-            
-        case LM_NODE_VALUE:
-            printf("Value (%lld)\n", node->as.value);
-            break;
-            
-        case LM_NODE_PRIMITIVE:
-            printf("Primitive (opcode=%d)\n", node->as.primitive.opcode);
-            for (int i = 0; i < _LMACHINE_PRIMITIVE_ARGS_COUNT; ++i) {
-                printf("%*sarg[%d]:\n", indent + 2, "", i);
-                lm_node_debug_print(node->as.primitive.args[i], indent + 4);
-            }
-            break;
-            
-        case LM_NODE_THUNK:
-            printf("Thunk\n");
-            printf("%*sfunc:\n", indent + 2, "");
-            lm_node_debug_print(node->as.thunk, indent + 4);
-            break;
-            
-        default:
-            printf("Unknown node type (%d)\n", node->tag);
-            break;
-    }
-}
 void lm_node_cool_print(const lm_node_t* node) {
+    size_t i;
+
     if (node == NULL) {
         printf("NULL");
         return;
     }
     switch (node->tag) {
         case LM_NODE_ABSTRACTION:
-            printf("λ(%%%ld = ", node->as.abstraction.var_index);
+            printf("λ %%%ld.", node->as.abstraction.var_index);
             lm_node_cool_print(node->as.abstraction.body);
-            printf(")");
             break;
             
         case LM_NODE_APPLICATION:
@@ -698,7 +649,7 @@ void lm_node_cool_print(const lm_node_t* node) {
             
         case LM_NODE_PRIMITIVE:
             printf("([opcode=%d] ", node->as.primitive.opcode);
-            for (int i = 0; i < _LMACHINE_PRIMITIVE_ARGS_COUNT; ++i) {
+            for (i = 0; i < _LMACHINE_PRIMITIVE_ARGS_COUNT; ++i) {
                 lm_node_cool_print(node->as.primitive.args[i]);
                 if (i != _LMACHINE_PRIMITIVE_ARGS_COUNT - 1) printf(" ");
             }
