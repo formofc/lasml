@@ -1,0 +1,18 @@
+// Fixed-point combinator (Y-combinator) for recursion
+const Y = λ recursive. (
+    λ x. (x x)
+    (λ self_apply. (recursive (self_apply self_apply))) // faster: node `(recursive (self_apply self_apply))` has 2 referenses now
+)
+
+
+const fib = (Y
+    λ recursive. λ n. (
+        (> n 3)
+            (+ (recursive (- n 1)) (recursive (- n 2)))
+            1
+    )
+)
+const main = (
+    fib 20
+    // 4181
+)
