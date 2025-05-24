@@ -34,11 +34,7 @@ SOFTWARE.
 // Old C style code just cuz I like it
 
 
-#ifdef IO_FEATURE
 #define IO_FEATURE_ENABLE true
-#else
-#define IO_FEATURE_ENABLE false
-#endif
 
 #define LMACHINE_IMPLEMENTATION
 #define LMACHINE_BASIC_UTILS

@@ -1,0 +1,25 @@
+const pair = λ a. λ b. λ f. (f a b)
+const fst = λ p. (p true) 
+const snd = λ p. (p false) 
+
+const M_return = λ a. λ f. (f a)
+
+const M_bind = λ m. λ f. λ world. (
+    f (snd (m world)) (fst (m world))
+)
+
+const IO_put = λ c. λ world. (pair (put_char c world) c)
+const IO_get = λ world. (pair (get_char world) world)
+
+const ASCII_ZERO = 48
+const to_digit = λ i. (+ i ASCII_ZERO)
+
+const main = (M_return (λ x. x)
+    (M_bind
+        (M_bind (IO_put (to_digit 1)) (IO_put (to_digit 2)))
+        (M_bind (IO_put (to_digit 3)) (IO_put (to_digit 4)))
+    )
+)
+// Should print 1234, but prints 123
+// Gets worse with more complex stuff
+// Not really works cuz of lazy evaluation

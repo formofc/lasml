@@ -468,7 +468,7 @@ lm_node_t* _lm_eval_primitive(lm_node_t* node) {
             return result; // DCO
         }
         case LM_NODE_PRIMITIVE_GET_CHAR: {
-             for (int i = 0; i < _LMACHINE_PRIMITIVE_ARGS_COUNT; ++i) lm_destroy_node(args[i]);
+            for (int i = 0; i < _LMACHINE_PRIMITIVE_ARGS_COUNT; ++i) lm_destroy_node(args[i]);
             lm_destroy_node(node);
 
             return lm_mk_value((lm_int)getchar()); // DCO
@@ -677,7 +677,7 @@ lm_node_t* lm_evaluate(lm_node_t* node) {
                 result = lm_evaluate(lm_copy_node(node->as.thunk));
                 lm_destroy_node(node);
                 *node = *result;
-
+                
             } else { // thunks have access to context depended bindings
                 result = lm_evaluate(lm_copy_node(node->as.thunk));
                 lm_destroy_node(node);
