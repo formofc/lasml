@@ -12,6 +12,7 @@ A relatively lightweight lambda calculus interpreter with a few extra features.
 - **Application sugar**:  
   Classic λ-calculus requires exactly 2 arguments per application, but here it’s generalized for brevity:  
   `((x x) x)` → `(x x x)`  
+- **Both lazy and strict applications**: lazy via `(f M)`, strict via `[]`
 
 ## **About**  
 Created because:  

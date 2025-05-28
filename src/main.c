@@ -40,6 +40,7 @@ SOFTWARE.
 #define LMACHINE_BASIC_UTILS
 #define LMACHINE_CACHED_BOOLEANS
 #define LMACHINE_STDIO
+#define LMACHINE_STRICT
 #include <lmachine.h>
 #define STB_C_LEXER_IMPLEMENTATION
 #include <stb_c_lexer.h>
@@ -399,6 +400,7 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
     stb_lex_location pos;
     enum lm_node_primitive_t primitive_op;
     lm_node_t *temp_expr = NULL, *temp_expr2;
+    int temp_char;
 
     stb_c_lexer_get_token(&ctx->lex, &token);
     
@@ -428,15 +430,16 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
             return parse_expression(ctx, &(*expr)->as.primitive.args[0], state) && parse_expression(ctx, &(*expr)->as.primitive.args[1], state);
         }
         
-        
+        case '[': // Strict application. Maybe add as option in command line
         case '(': { // Parse application. In common lambda calculus application takes only 2 arguments, but here its varios
             // ((x x) x) -> (x x x)
             // Syntax sugar
             *expr = NULL;
-            
+            temp_char = token.token == '[' ? ']' : ')';
+
             while (true) {
                 stb_c_lexer_peek_token(&ctx->lex, &token);
-                if (token.token == ')') {
+                if (token.token == temp_char) {
                     stb_c_lexer_get_token(&ctx->lex, &token);
                     break;
                 }
@@ -444,7 +447,10 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
                 if (!parse_expression(ctx, &temp_expr, state)) return false;
                 
                 if (*expr) {
-                    *expr = lm_mk_app(*expr, temp_expr);
+                    *expr = 
+                        temp_char == ']' ? 
+                            lm_mk_strict_app(*expr, temp_expr) :
+                            lm_mk_app(*expr, temp_expr);
                 } else {
                     *expr = temp_expr;
                 }
