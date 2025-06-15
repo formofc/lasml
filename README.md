@@ -1,6 +1,6 @@
-# **lasml — Lambda ASseMbler Language**  
+# **lasml — Lambda ASseMbler Language**
 
-A relatively lightweight lambda calculus interpreter with a few extra features.  
+A relatively lightweight lambda calculus interpreter with a few extra features.
 
 ## **Features**  
 - **Full lambda calculus support** — obviously
@@ -21,10 +21,10 @@ Created because:
 
 ## **Quick Start**
 ```bash
-git clone https://github.com/misterdown/lasm  
-cd lasm  
-cc src/main.c -I includes -o lasm
-lasm --help
+git clone https://github.com/formofc/lasml  
+cd lasml
+cc src/main.c -I includes -o lasml
+lasml --help
 ```
 
 ## **Documentation**
@@ -39,4 +39,4 @@ Need more details? Check out:
 [**MIT**](LICENSE)
 
 ## **Origin**
-[This](github.com/misterdown/lasm)
+[This](https://github.com/misterdown/lasm)
