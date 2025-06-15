@@ -8,12 +8,12 @@ const Y = λ recursive. (
 // Lists Church encoding
 const empty_list = false
 
-const list_cons = λ head_value. λ tail. λ selector. λ default. (
+const list_cons = λ head_value tail selector default. (
     selector head_value (tail selector default)
 )
-const list_fold = λ reducer. λ initial_acc. λ lst. (
+const list_fold = λ reducer initial_acc lst. (
     lst
-        (λ head. λ tail_acc. (reducer head tail_acc))
+        (λ head tail_acc. (reducer head tail_acc))
         initial_acc
 )
 
@@ -28,16 +28,16 @@ const list_tail = λ lst. (
 
 
 
-const list_map = λ transform. λ lst. (
+const list_map = λ transform lst. (
     list_fold
-        (λ head. λ tail. (list_cons (transform head) tail))
+        (λ head tail. (list_cons (transform head) tail))
         empty_list
         lst
 )
 
-const list_filter = λ predicate. λ lst. (
+const list_filter = λ predicate lst. (
     list_fold
-        (λ head. λ tail. (
+        (λ head tail. (
             (predicate head)
                 (list_cons head tail)
                 tail
@@ -46,17 +46,7 @@ const list_filter = λ predicate. λ lst. (
         lst
 )
 
-const _make_list = (Y
-    λ recursive. λ is_terminator. λ accumulated_list. λ next_value. (
-        (is_terminator next_value)
-            accumulated_list
-            (recursive is_terminator (list_cons next_value accumulated_list))
-    )
-)
-const make_list = λ is_terminator. λ first_value. (
-    _make_list is_terminator empty_list first_value
-)
-const list_concat = λ list1. λ list2. (
+const list_concat = λ list1 list2. (
     list_fold list_cons list2 list1
 )
 
@@ -64,11 +54,21 @@ const list_concat = λ list1. λ list2. (
 // Helpers
 // Carryed `+` (primitives doesnt works like usual abstractions)
 const list_sum = λ lst. (
-    list_fold (λ x. λ y. (+ x y)) 0 lst
+    list_fold (λ x y. (+ x y)) 0 lst
+)
+
+// Inclusive
+const list_range = (Y
+    (λ recursive bottom top. ( 
+            (= bottom top)
+                (list_cons bottom empty_list)
+                (list_cons bottom (recursive (+ bottom 1) top))
+        )
+    )
 )
 
 const not = λ val. (val false true)
-const sample_list = (make_list (λ x. (= 0 x)) 1 2 3 4 5 6 7 8 9 10 0)
+const sample_list = (list_range 0 10)
 const main = (
     list_sum (list_filter (λ x. (not (= x 100))) (list_map (λ x. (* x x)) (list_concat sample_list sample_list)))
     // 570

@@ -354,45 +354,67 @@ bool parse_lambda_expr(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* 
     size_t param_index = 0;
     stb_lex_token token;
     stb_lex_location pos;
+    lm_node_t *abs_list_head = NULL, *abs_list_tail = NULL;
+    bool success = false;
 
-    if (!stb_c_lexer_get_token(&ctx->lex, &token)) {
-        stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
+    { // Parse till '.'
+      //  In original lambda calculus you should provide only 1 binding name and body after
+      //  But here, you can do this `\ a b c. (c b a)`
+        while (true) {
+            if (!stb_c_lexer_get_token(&ctx->lex, &token)) {
+                stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
 
-        fprintf(stderr, "%s:%d:%d EOF in lambda expression\n", ctx->filepath, pos.line_number, pos.line_offset);
-        return false;
+                fprintf(stderr, "%s:%d:%d EOF in lambda expression\n", ctx->filepath, pos.line_number, pos.line_offset);
+
+                goto cleanup;
+            }
+            
+            if (token.token == '.') {
+                break;
+
+            } else if (token.token == CLEX_id) {
+                param_index = get_index(ctx, token.string);
+                if (param_index == INVALID_VARIABLE_INDEX) goto cleanup;                
+
+                if (abs_list_tail) {
+                    abs_list_tail->as.abstraction.body = lm_mk_abs(param_index, NULL);
+                    abs_list_tail = abs_list_tail->as.abstraction.body;
+                } else {
+                    abs_list_tail = lm_mk_abs(param_index, NULL);
+                    abs_list_head = abs_list_tail;
+                }
+
+            } else {
+                stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
+
+                fprintf(stderr, "%s:%d:%d Expected `.` or binding name\n", ctx->filepath, pos.line_number, pos.line_offset);
+
+                goto cleanup;
+            }
+        }
     }
-    
-    { // Name of param
-        if (token.token != CLEX_id) {
+
+    { // Validation
+        if (!abs_list_head) {
             stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
 
-            fprintf(stderr, "%s:%d:%d Expected parameter name %ld: \n", ctx->filepath, pos.line_number, pos.line_offset, token.token);
+            fprintf(stderr, "%s:%d:%d Expected at least 1 binding name\n", ctx->filepath, pos.line_number, pos.line_offset);
 
-            return false;
+            goto cleanup;
         }
-        param_index = get_index(ctx, token.string);
-        if (param_index == INVALID_VARIABLE_INDEX) return false;
-    }
 
-    { // Expected '.'
-        stb_c_lexer_get_token(&ctx->lex, &token);
-        
-        if (token.token != '.') {
-            stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
-
-            fprintf(stderr, "%s:%d:%d Expected `.`\n", ctx->filepath, pos.line_number, pos.line_offset);
-
-            return false;
+        if (!parse_expression(ctx, &abs_list_tail->as.abstraction.body, state)) {
+            goto cleanup;
         }
     }
-    
-    if (!parse_expression(ctx, expr, state)) {
-        return false;
-    }
-    
-    *expr = lm_mk_abs(param_index, *expr);
 
-    return *expr;
+    *expr = abs_list_head;
+    abs_list_head = NULL;
+    success = true;
+cleanup:
+    if (abs_list_head) lm_destroy_node(abs_list_head); // abs_list_tail - part of linked list
+    
+    return success;
 }
 
 bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* state) {
@@ -402,7 +424,13 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
     lm_node_t *temp_expr = NULL, *temp_expr2;
     int temp_char;
 
-    stb_c_lexer_get_token(&ctx->lex, &token);
+    if (!stb_c_lexer_get_token(&ctx->lex, &token)) {
+        stb_c_lexer_get_location(&ctx->lex, NULL, &pos);
+
+        fprintf(stderr, "%s:%d:%d Unexpected EOF in expression: %ld\n",ctx->filepath, pos.line_number, pos.line_offset, token.token);
+
+        return false;
+    }
     
     switch (token.token) {
         case CLEX_int: {
@@ -413,6 +441,7 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
         case '>':
         case '=':
         case '/':
+        case '%':
         case '*':
         case '-':
         case '+': {
@@ -421,6 +450,7 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
                 case '>': primitive_op = LM_NODE_PRIMITIVE_MORE; break;
                 case '=': primitive_op = LM_NODE_PRIMITIVE_EQ; break;
                 case '/': primitive_op = LM_NODE_PRIMITIVE_DIV; break;
+                case '%': primitive_op = LM_NODE_PRIMITIVE_MOD; break;
                 case '*': primitive_op = LM_NODE_PRIMITIVE_MUL; break;
                 case '-': primitive_op = LM_NODE_PRIMITIVE_SUB; break;
                 case '+': primitive_op = LM_NODE_PRIMITIVE_ADD; break;
@@ -429,7 +459,9 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
             *expr = lm_mk_primitive(primitive_op, NULL, NULL);
             return parse_expression(ctx, &(*expr)->as.primitive.args[0], state) && parse_expression(ctx, &(*expr)->as.primitive.args[1], state);
         }
-        
+        case '\\': {
+            return parse_lambda_expr(ctx, expr, state);
+        }
         case '[': // Strict application. Maybe add as option in command line
         case '(': { // Parse application. In common lambda calculus application takes only 2 arguments, but here its varios
             // ((x x) x) -> (x x x)
@@ -462,7 +494,7 @@ bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* s
         }
         
         case CLEX_id: {
-            if (strcmp(token.string, "l") == 0 || strcmp(token.string, "λ") == 0) return parse_lambda_expr(ctx, expr, state);
+            if (strcmp(token.string, "λ") == 0) return parse_lambda_expr(ctx, expr, state);
             if (IO_FEATURE_ENABLE && strcmp(token.string, "put_char") == 0) {
                 if (!parse_expression(ctx, &temp_expr, state)) return false;
                 if (!parse_expression(ctx, &temp_expr2, state)) return false;

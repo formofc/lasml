@@ -6,7 +6,7 @@ const Y = λ recursive. (
 
 
 const fib = (Y
-    λ recursive. λ n. (
+    λ recursive n. (
         (> n 3)
             (+ (recursive (- n 1)) (recursive (- n 2)))
             1
