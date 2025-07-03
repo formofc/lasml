@@ -41,5 +41,3 @@ cc src/main.c -I includes -o lasml
 
 ## **Inspiration**
 Forked from [`misterdown/lasm`](https://github.com/misterdown/lasm) with SOME optimizations
-This is my old account, so ...
-```
