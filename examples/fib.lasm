@@ -7,12 +7,12 @@ const Y = λ recursive. (
 
 const fib = (Y
     λ recursive n. (
-        (> n 3)
+        (> n 2)
             (+ (recursive (- n 1)) (recursive (- n 2)))
             1
     )
 )
 const main = (
-    fib 20
-    // 4181
+    fib 25 
+    // 75025
 )

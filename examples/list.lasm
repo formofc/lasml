@@ -68,8 +68,8 @@ const list_range = (Y
 )
 
 const not = λ val. (val false true)
-const sample_list = (list_range 0 10)
+const sample_list = (list_range 0 1000)
 const main = (
     list_sum (list_filter (λ x. (not (= x 100))) (list_map (λ x. (* x x)) (list_concat sample_list sample_list)))
-    // 570
+    // 667666800
 )

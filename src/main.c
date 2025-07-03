@@ -87,6 +87,7 @@ typedef struct {
     lm_node_t* node;
 
 } kv_index_t;
+
 typedef struct {
     kv_index_t* data;
     size_t size;
@@ -97,6 +98,8 @@ typedef struct {
 typedef struct {
     constants_t constants;
     lm_node_t* entry_point;
+    char cache_data[128];
+    lm_node_cache_t cache;
 
 } l_vm_state_t;
 
@@ -104,6 +107,7 @@ typedef struct {
     const char* filepath;
     indecies_t indecies;
     stb_lexer lex;
+
 } parser_ctx_t;
 
 void destroy_parse_context(parser_ctx_t* ctx) {
@@ -118,6 +122,13 @@ void destroy_parse_context(parser_ctx_t* ctx) {
 
     dym_free(&ctx->indecies);
 }
+
+bool init_l_vm_state(l_vm_state_t* state) {
+    if (!state) return false;
+
+    return lm_init_node_cache(&state->cache, state->cache_data, sizeof(state->cache_data), 2);
+}
+
 void destroy_l_vm_state(l_vm_state_t* state) {
     size_t i;
 
@@ -129,6 +140,8 @@ void destroy_l_vm_state(l_vm_state_t* state) {
     }
 
     dym_free(&state->constants);
+
+    lm_destroy_node_cache(&state->cache);
 }
 
 void print_usage(const char* selfpath) {
@@ -334,7 +347,7 @@ bool parse_constant(parser_ctx_t* ctx, l_vm_state_t* state) {
             
         } else {
             constant.name = constant_name;
-            constant.node = lm_evaluate(expr); // its constant you know
+            constant.node = lm_evaluate_cache(expr, &state->cache); // its constant you know
             
             dym_push(&state->constants, constant);
             
@@ -420,7 +433,7 @@ cleanup:
 bool parse_expression(parser_ctx_t* ctx, lm_node_t** expr, const l_vm_state_t* state) {
     stb_lex_token token;
     stb_lex_location pos;
-    enum lm_node_primitive_t primitive_op;
+    lm_node_primitive_t primitive_op;
     lm_node_t *temp_expr = NULL, *temp_expr2;
     int temp_char;
 
@@ -710,6 +723,8 @@ int main(int argc, char** argv) {
     bool success = false;
     process_arguments(&config, argc, argv);
     
+    if (!init_l_vm_state(&state)) goto cleanup;
+
     if (config.quote) {
         if (!parse_quote(&state, config.quote)) {
             fprintf(stderr, "Failed to parse quote\n");
@@ -726,7 +741,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "No entry point(`main`) found\n");
         goto cleanup;
     }
-    evaluated = lm_evaluate(state.entry_point); //  `state.entry_point` destroyed
+    evaluated = lm_evaluate_cache(state.entry_point, &state.cache); //  `state.entry_point` destroyed
     if (!config.no_print_resuk) {
         lm_node_cool_print(evaluated);
         printf("\n");

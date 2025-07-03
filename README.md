@@ -13,6 +13,7 @@ A relatively lightweight lambda calculus interpreter with a few extra features.
   Classic λ-calculus requires exactly 2 arguments per application and 1 name for abstraction, but here it’s generalized for brevity:  
   `λ x. λ y.((x y) x)` → `λ x y.(x y x)`
 - **Both lazy and strict applications**: lazy via `(f M)`, strict via `[]`
+- **Simple caching**: Use only 128 bytes of RAM and gives x2 perfomance boost
 
 ## **About**
 Created because:
