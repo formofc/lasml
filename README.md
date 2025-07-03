@@ -1,43 +1,45 @@
 # **lasml — Lambda ASseMbler Language**
 
-A relatively lightweight lambda calculus interpreter with a few extra features.
+A lightweight lambda calculus interpreter with practical enhancements.
 
 ## **Features**  
-- **Full lambda calculus support** — obviously
-- **Numeric primitives** — Works with actual integers, not just Church encodings. `+`, `-`, `*`, `/`, `%`
-- **Constants** — Named values for convenience. They won’t help with recursion — use the Y-combinator instead.  
-- **I/O** — Exists, but don’t expect much (just being honest)  
-- **Lazy evaluation** — Call-by-need  
-- **Performance** — Decent, but don’t push it  
-- **Application and abstraction sugar**:  
-  Classic λ-calculus requires exactly 2 arguments per application and 1 name for abstraction, but here it’s generalized for brevity:  
-  `λ x. λ y.((x y) x)` → `λ x y.(x y x)`
-- **Both lazy and strict applications**: lazy via `(f M)`, strict via `[]`
-- **Simple caching**: Use only 128 bytes of RAM and gives x2 perfomance boost
+- **Full lambda calculus support** — Naturally
+- **Native numeric operations** — Real integer arithmetic: `+`, `-`, `*`, `/`, `%`
+- **Named constants** — Convenient aliases (recursion still requires Y-combinator)
+- **Minimal I/O** — Exists, but don’t expect much
+- **Lazy evaluation** — Call-by-need
+- **Balanced performance** — Efficient within reasonable limits
+- **Syntax sugar**:
+  Generalized application/abstraction:
+  `λ x y.(x y x)` replaces `λ x. λ y.((x y) x)`
+- **Dual evaluation modes**:
+  `(f M)` for lazy • `[f M]` for strict
+- **Micro-caching** — 128-byte cache for 2x speed boost
 
-## **About**
-Created because:
-1. **First reason** — To kill some free time
-2. **Second reason** — Educational purposes
+## **About**  
+Created because:  
+1. **To kill free time** — Because I'am bored
+2. **Educational value** — Learn lambda calculus the hard(er) way  
 
 ## **Quick Start**
 ```bash
 git clone https://github.com/formofc/lasml  
 cd lasml
 cc src/main.c -I includes -o lasml
-lasml --help
+./lasml --help
 ```
 
 ## **Documentation**
-Need more details? Check out:
-- [Examples](examples/)
-- The source code
-- Any good λ-calculus article
+- [`Examples`](examples/)
+- [`Source code`](src/)
+- Lambda calculus primers 
 
 ---  
 
 ## **License**  
-[**MIT**](LICENSE)
+[**MIT**](LICENSE)  
 
-## **Origin**
-[This](https://github.com/misterdown/lasm)
+## **Inspiration**
+Forked from [`misterdown/lasm`](https://github.com/misterdown/lasm) with SOME optimizations
+This is my old account, so ...
+```
